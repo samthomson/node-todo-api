@@ -9,6 +9,7 @@ var {User} = require('./models/user');
 const {ObjectID} = require('mongodb');
 
 var app = express();
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -51,8 +52,35 @@ app.get('/todos/:id', (req, res) => {
     });
 });
 
-app.listen(3000, () => {
-    console.log('Started on port 3000');
+app.delete('/todos/:id', (req, res) => {
+    // get the id
+    var id = req.params.id;
+
+    // validate the id -> not valid? return 404
+    if (!ObjectID.isValid(id)) {
+        res.status(404).send();
+    }
+
+    // remove todo by id
+    Todo.findByIdAndRemove(id)
+    .then((todo) => {
+        // success
+        if(!todo) {
+            // if no doc, send 404
+            res.status(404).send();
+        }
+
+        res.status(200).send({todo});
+    }).catch((e) => {
+        // error - 404 empty body
+        res.status(400).send();
+    });
+
+
+});
+
+app.listen(port, () => {
+    console.log(`Started on port ${port}`);
 });
 
 module.exports = {app};
